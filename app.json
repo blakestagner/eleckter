@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "eleckter",
+    "slug": "eleckter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo512.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.blakestagner.eleckter",
+      "buildNumber": "0.0.5",
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo512.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.blakestagner.eleckter",
+      "versionCode": 0
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#0277BD"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    }
+  }
+}
