@@ -109,3 +109,16 @@ export async function getCampignDetails(data) {
   })
   .catch((err) => Promise.reject(err.response.data));
 }
+export async function getYardSigns(data) {
+  const userToken = await AsyncStorage.getItem('userToken')
+  return axios.get(`${BASE_URL}/api/getYardSigns`, { 
+      params: { 
+          'x-access-token': userToken,
+          'campaign': data
+      }
+  })
+  .then( async (res) => {
+      return res.data
+  })
+  .catch((err) => Promise.reject(err.response.data));
+}

@@ -1,51 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, ScrollView, Dimensions, StyleSheet, PermissionsAndroid } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { Text, View, ScrollView, Dimensions, StyleSheet, Pressable, Button } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { colorSecondary, colorMainDark } from '../../components/Theme';
+import { UserContext } from '../../components/context/UserContext';
+import { getYardSigns } from '../../db/Repository';
 
 export default function YardSignScreen() {
-  const [currentLocation, setCurrentLocation] = useState(
-    { 
-      latitude: null, 
-      longitude: null
-    }
-  );
-
-  /*const androidLocationPermission = async () => {
-    const hasLocationPermission = await PermissionsAndroid.check(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-    );
-    if(hasLocationPermission) {
-      setLocationPermission(true)
-    } else {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: "Location Permission",
-            message:
-              "Dovoli needs access to your Location",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK"
-          }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("You can use the Location");
-        } else {
-          console.log("Location permission denied");
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-  }*/
 
   return (
     <ScrollView style={styles.container}>
       <Map />
       <View style={styles.content}>
-        <Text>TEXTss</Text>
       </View>
     </ScrollView>
   );
@@ -53,17 +19,17 @@ export default function YardSignScreen() {
   
 function Map() {
   const [currentLocation, setCurrentLocation] = useState(
-    { 
+    {
       latitude: 47.2476383,
       longitude: -121.4640483,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     }
   );
-  const [pins, setPins] = useState([
-    { latitude: 37.78825, longitude: -122.4324},
-    { latitude: 37.78925, longitude: -122.4534}
-  ])
+  const [loading, setLoading] = useState(true)
+  const [pins, setPins] = useState(null)
+
+  const user = useContext(UserContext)
 
   useEffect(() => {
     const findCoordinates = async () => {
@@ -76,32 +42,86 @@ function Map() {
       let location = await Location.getCurrentPositionAsync({});
       setCurrentLocation({
         ...currentLocation,
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
       })
+      setLoading(false)
     };
     findCoordinates()
   }, [])
 
-  const onRegionChange = (region) => {
-    setCurrentLocation(
-      { 
-        region 
-      }
-    );
+
+  useEffect(() => {
+    
+    if(user.currentCampaign && !loading) {
+      getYardSigns(user.currentCampaign.id)
+      .then(res => {
+        setPins(res)
+      })
+      .catch(err => {
+        console.log(err)
+      })
+    }
+    console.log('doing')
+  }, [user.currentCampaign && loading])
+
+  const placeSign = async () => {
+    let location = await Location.getCurrentPositionAsync({});
+    console.log(location.coords.latitude, location.coords.longitude)
+    
   }
 
 
   return (
-    <MapView
-      style={styles.map}
-      region={
-        currentLocation.latitude && currentLocation.longitude ? 
-        currentLocation : null }
-      onRegionChange={() => onRegionChange()}
-      >
-      <Pins pins={pins}/>
-      </MapView> 
+    <View>
+      <MapView
+        provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        region={currentLocation}
+        showsUserLocation={true}
+        //onRegionChangeComplete={onRegionChange}
+        >
+        { pins ? <Pins pins={pins}/> : null }
+      </MapView>
+      <View 
+        style={styles.actionContainer}>
+        <Pressable 
+            android_ripple={{
+              color: '#fff',
+              borderless: false
+            }}
+            style={({ pressed }) => [
+              {
+                elevation: pressed
+                  ? 1
+                  : 3
+              },
+              styles.button, styles.primary
+            ]}
+            onPress={() => placeSign()}>
+            <Text style={styles.buttonText}>Place Sign</Text>
+        </Pressable>
+        <Pressable 
+          android_ripple={{
+            color: '#fff',
+            borderless: false
+          }}
+          style={({ pressed }) => [
+            {
+              elevation: pressed
+                ? 1
+                : 3
+            },
+            styles.button, styles.secondary
+          ]}
+          onPress={() => placeSign()}>
+          <Text 
+            style={styles.buttonText}>
+            Place Yard Sign
+          </Text>
+        </Pressable>
+      </View>
+    </View> 
   )
 }
 
@@ -110,9 +130,11 @@ function Pins({pins}) {
   return (
     <>
     { 
-      pins.map(pin => 
+      pins.map((pin, i) => 
         <Marker
-          key={pin.latitude + pin.longitude}
+          title={`${pin.created}`}
+          description={`pin-${i}`}
+          key={`yard-sign-${pin.created}`}
           pinColor={'red'}
           coordinate={{
             latitude: pin.latitude,
@@ -146,4 +168,32 @@ function Pins({pins}) {
       height: 1,
       width: '80%',
     },
+    actionContainer: {
+      flexDirection: 'row',
+      marginHorizontal: 10,
+      justifyContent: 'space-around'
+    },
+    button: {
+      width: "45%",
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 4,
+      backgroundColor: 'black',
+      overflow: 'hidden'
+
+    },
+    buttonText: {
+      padding: 8,
+      fontSize: 18,
+      lineHeight: 21,
+      fontWeight: 'bold',
+      letterSpacing: 0.25,
+      color: 'white',
+    },
+    primary: {
+      backgroundColor: colorMainDark
+    },
+    secondary: {
+      backgroundColor: colorSecondary
+    }
   });

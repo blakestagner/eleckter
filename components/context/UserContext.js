@@ -76,7 +76,6 @@ export const UserProvider = ({children}) => {
 
     useEffect(() => {
         if(campaign && user) {
-            console.log(campaign)
             const getCurrentCampaign = campaign.findIndex(obj => obj.id = user.campaign);
             setCurrentCampaign(campaign[getCurrentCampaign])
         }
